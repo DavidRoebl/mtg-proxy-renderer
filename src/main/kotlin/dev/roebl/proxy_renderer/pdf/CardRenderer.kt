@@ -10,7 +10,7 @@ interface CardRenderer {
 
 fun createRenderer(cards: Collection<Card>, mode: RenderMode = RenderMode.A4): CardRenderer = when (mode) {
     RenderMode.SINGLE -> SingleCardRenderer(cards)
-    RenderMode.A4 -> TODO()
+    RenderMode.A4 -> A4CardRenderer(cards)
 }
 
 enum class RenderMode {

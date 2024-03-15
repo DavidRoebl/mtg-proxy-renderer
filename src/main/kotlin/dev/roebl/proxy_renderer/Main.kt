@@ -2,6 +2,7 @@ package dev.roebl.proxy_renderer
 
 import com.google.gson.Gson
 import dev.roebl.proxy_renderer.pdf.RenderMode
+import dev.roebl.proxy_renderer.pdf.RenderMode.A4
 import dev.roebl.proxy_renderer.pdf.RenderMode.SINGLE
 import dev.roebl.proxy_renderer.pdf.SingleCardRenderer
 import dev.roebl.proxy_renderer.pdf.createRenderer
@@ -18,8 +19,8 @@ fun main(args: Array<String>) = runBlocking {
     val cards = File("assets/decklist.txt").readLines()
 //    val responses = responsesFromScryfall(cards)
     val responses = responsesFromDisk(cards)
-    val file = File("assets/pdfs/cards_separate.pdf")
-    val renderer = createRenderer(responses, SINGLE)
+    val file = File("assets/pdfs/cards_all.pdf")
+    val renderer = createRenderer(responses, A4)
     renderer.renderTo(file)
 }
 

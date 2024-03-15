@@ -48,20 +48,23 @@ internal fun PDPageContentStream.multilineText(
     intensity: Float = 1f,
     xPos: Float,
     yPos: Float,
-    width: Float
+    width: Float,
+    splitToWords: (String)->Array<String> = {it.split(" ").toTypedArray()},
+    wordsToString: (Array<String>) -> String = {recombine(it)}
 ): Float {
     val blocks = content.split("\n")
     val font = Settings.font
     val _yPosStart = yPos * -1 - textSize
     var _yPos = _yPosStart
+
     val _xPos = when (align) {
         Align.LEFT -> xPos
-        Align.RIGHT -> xPos - font.widthOf(content, textSize)
-        Align.CENTER -> xPos - font.widthOf(content, textSize) / 2
+        Align.RIGHT -> xPos - min(font.widthOf(content, textSize), width)
+        Align.CENTER -> xPos - min(font.widthOf(content, textSize), width) / 2
     }
 
     blocks.forEach { blockContent ->
-        val words = blockContent.split(" ").toTypedArray()
+        val words = splitToWords(blockContent)
         var startIndex = 0
         val lines = mutableListOf<String>()
         while (startIndex <= words.size) {
@@ -70,12 +73,14 @@ internal fun PDPageContentStream.multilineText(
                 font = font,
                 maxWidth = width,
                 startIndex = startIndex,
-                fontSize = textSize
+                fontSize = textSize,
+                wordsToString = wordsToString
             )
             if (lineSize == 0) {
                 break
             }
-            val line = words.copyOfRange(startIndex, startIndex + lineSize).recombine()
+            val wordsForLine = words.copyOfRange(startIndex, startIndex + lineSize)
+            val line = wordsToString(wordsForLine)
             lines.add(line)
             startIndex += lineSize
         }
@@ -104,14 +109,16 @@ private fun findElementsThatFit(
     fontSize: Float = 9f,
     maxWidth: Float,
     startIndex: Int = 0,
-    indent: String = ""
+    indent: String = "",
+    wordsToString: (Array<String>) -> String
 ): Int {
     val widthOfIndent = font.widthOf(indent, 9f)
 
     var toIndex = startIndex
     do {
         toIndex += 1
-        val string = input.copyOfRange(startIndex, min(toIndex, input.size)).recombine()
+        val wordsInRange = input.copyOfRange(startIndex, min(toIndex, input.size))
+        val string = wordsToString(wordsInRange)
         val width = font.widthOf(string, fontSize) + widthOfIndent
 
     } while (toIndex <= input.size && width <= maxWidth)
@@ -120,11 +127,11 @@ private fun findElementsThatFit(
 }
 
 
-private fun Array<String>.recombine(delimiter: String = " "): String {
-    return if (isEmpty()) {
+private fun recombine(content: Array<String>, delimiter: String = " "): String {
+    return if (content.isEmpty()) {
         return ""
     } else {
-        reduce { first, second ->
+        content.reduce { first, second ->
             "$first$delimiter$second"
         }
     }
